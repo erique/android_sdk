@@ -41,6 +41,7 @@ public class Screenshot {
         String serial = null;
         String filepath = null;
         boolean landscape = false;
+        boolean noalpha = false;
 
         if (args.length == 0) {
             printUsageAndQuit();
@@ -74,6 +75,8 @@ public class Screenshot {
                 serial = args[index++];
             } else if ("-l".equals(argument)) {
                 landscape = true;
+            } else if ("--rgb".equals(argument)) {
+                noalpha = true;
             } else {
                 // get the filepath and break.
                 filepath = argument;
@@ -188,7 +191,7 @@ public class Screenshot {
             if (target != null) {
                 try {
                     System.out.println("Taking screenshot from: " + target.getSerialNumber());
-                    getDeviceImage(target, filepath, landscape);
+                    getDeviceImage(target, filepath, landscape, noalpha);
                     System.out.println("Success.");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -204,7 +207,7 @@ public class Screenshot {
     /*
      * Grab an image from an ADB-connected device.
      */
-    private static void getDeviceImage(IDevice device, String filepath, boolean landscape)
+    private static void getDeviceImage(IDevice device, String filepath, boolean landscape, boolean noalpha)
             throws IOException {
         RawImage rawImage;
 
@@ -228,7 +231,7 @@ public class Screenshot {
 
         // convert raw data to an Image
         BufferedImage image = new BufferedImage(rawImage.width, rawImage.height,
-                BufferedImage.TYPE_INT_ARGB);
+                noalpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
 
         int index = 0;
         int IndexInc = rawImage.bpp >> 3;
@@ -247,13 +250,15 @@ public class Screenshot {
 
     private static void printUsageAndQuit() {
         // 80 cols marker:  01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        System.out.println("Usage: screenshot2 [-d | -e | -s SERIAL] [-l] OUT_FILE");
+        System.out.println("Usage: screenshot2 [-d | -e | -s SERIAL] [-l] [--rgb] OUT_FILE");
         System.out.println("");
         System.out.println("    -d      Uses the first device found.");
         System.out.println("    -e      Uses the first emulator found.");
         System.out.println("    -s      Targets the device by serial number.");
         System.out.println("");
         System.out.println("    -l      Rotate images for landscape mode.");
+        System.out.println("");
+        System.out.println("    --rgb   Force RGB (no alpha) image.");
         System.out.println("");
 
         System.exit(1);
